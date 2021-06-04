@@ -1,8 +1,8 @@
-MAPR_UID=${MAPR_UID:-5000}
-MAPR_GID=${MAPR_GID:-5000}
-CLUSTER_IP=${CLUSTER_IP:-}
-CLUSTER_HOST=${CLUSTER_HOST:-mapr-cluster}
-CLUSTER_NAME=${CLUSTER_NAME:-mapr.cluster}
+MAPR_UID=2000
+MAPR_GID=2000
+CLUSTER_IP=192.168.56.101
+CLUSTER_HOST=maprdemo
+CLUSTER_NAME=demo.mapr.com
 
 source /vagrant/config.conf
 
@@ -32,14 +32,11 @@ make datainstall
 # Setup MapR Client
 echo 'deb http://package.mapr.com/releases/ecosystem-5.x/ubuntu binary/' >> /etc/apt/sources.list
 echo 'deb http://package.mapr.com/releases/v5.1.0/ubuntu/ mapr optional' >> /etc/apt/sources.list
-
 apt-get update --allow-unauthenticated 
 apt-get install mapr-kafka -y --allow-unauthenticated
-add-apt-repository ppa:webupd8team/java -y
+add-apt-repository ppa:openjdk-r/ppa -y
 apt-get update -y
-echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections
-echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections
-apt-get install oracle-java8-installer -y
+apt-get install openjdk-8-jdk -y
 
 if [ -n "${CLUSTER_IP}" ]
 	then echo "${CLUSTER_IP} ${CLUSTER_HOST}" >> /etc/hosts
@@ -51,12 +48,14 @@ useradd mapr -u ${MAPR_UID} -g ${MAPR_GID}
 
 # Build the TelemetryAgent (MapR Streams producers/consumers) and UI Server
 
-apt-get install -y maven
+# apt-get install -y maven
 cd /vagrant/racing-telemetry-application
-MAVEN_OPTS=-Xss256m mvn clean install
+wget -nc https://ftp.wayne.edu/apache/maven/maven-3/3.8.1/binaries/apache-maven-3.8.1-bin.tar.gz
+tar -zxvf apache-maven-3.8.1-bin.tar.gz
+MAVEN_OPTS=-Xss256m ./apache-maven-3.8.1/bin/mvn clean install
 
 # Add the launcher to the desktop
-
+mkdir -p /home/vagrant/Desktop
 cat > /home/vagrant/Desktop/Streams-Demo.desktop << EOF
 #!/usr/bin/env xdg-open
 
